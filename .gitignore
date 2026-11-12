@@ -1,0 +1,39 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/npm-debug.log*
+
+# Backend Java / Maven
+backend/target/
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.idea/
+backend/*.log
+
+# Python
+ml-service/__pycache__/
+ml-service/.venv/
+ml-service/venv/
+ml-service/*.pyc
+ml-service/.env
+
+# General
+.env
+.env.*
+*.log
+*.iml
+
+# AI / local tooling
+ECC/
+.gemini/
+
+# Root dependencies
+node_modules/
