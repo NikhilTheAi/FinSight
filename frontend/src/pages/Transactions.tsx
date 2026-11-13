@@ -13,16 +13,17 @@ import { CustomSelect } from '../components/CustomSelect';
 import { DatePicker } from '../components/DatePicker';
 import { EmptyState } from '../components/EmptyState';
 import { SummaryCard } from '../components/SummaryCard';
+import { TransactionRowSkeleton } from '../components/Skeleton';
 import { TransactionCategoryIcon } from '../components/TransactionCategoryIcon';
 import { useToast } from '../components/Toast';
 import {
   categoryOptions,
-  initialTransactions,
   paymentMethodOptions,
   type PaymentMethod,
   type TransactionRecord,
   type TransactionType,
 } from '../data/mockData';
+import { createTransaction, deleteTransaction, getTransactions, updateTransaction } from '../services/transactionApi';
 
 type TypeFilter = 'All' | 'Income' | 'Expense';
 
@@ -50,7 +51,7 @@ const buildEmptyForm = (type: TransactionType = 'Expense'): TransactionFormState
 
 export function Transactions() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [transactions, setTransactions] = useState<TransactionRecord[]>(initialTransactions);
+  const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const [searchText, setSearchText] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('All');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
@@ -60,6 +61,7 @@ export function Transactions() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<TransactionFormState>(buildEmptyForm());
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [isLoading, setIsLoading] = useState(true);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -72,6 +74,24 @@ export function Transactions() {
       setSearchParams({});
     }
   }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const loadTransactions = async () => {
+      try {
+        setIsLoading(true);
+        const nextTransactions = await getTransactions();
+        setTransactions(nextTransactions);
+      } catch (error) {
+        console.error('Failed to load transactions:', error);
+        showToast('error', 'Unable to load transactions', 'Please check that the backend server is running.');
+        setTransactions([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadTransactions();
+  }, [showToast]);
 
   const totalIncome = useMemo(
     () => transactions.filter((item) => item.type === 'Income').reduce((sum, item) => sum + item.amount, 0),
@@ -148,39 +168,51 @@ export function Transactions() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSaveTransaction = () => {
+  const handleSaveTransaction = async () => {
     if (!validateForm()) return;
 
     const parsedAmount = Number(form.amount);
-    const nextTransaction: TransactionRecord = {
-      id: editingId ?? `txn-${Date.now()}`,
-      title: form.description.trim(),
-      type: form.type,
-      category: form.category,
-      date: form.date,
-      paymentMethod: form.paymentMethod,
+    const type: 'INCOME' | 'EXPENSE' = form.type === 'Income' ? 'INCOME' : 'EXPENSE';
+    const payload = {
+      description: form.description.trim(),
       amount: parsedAmount,
-      note: form.note.trim(),
+      type,
+      category: form.category,
+      transactionDate: form.date,
+      paymentMethod: form.paymentMethod,
+      note: form.note.trim() || undefined,
     };
 
-    setTransactions((current) => {
+    try {
       if (editingId) {
-        return current.map((item) => (item.id === editingId ? nextTransaction : item));
+        const updatedTransaction = await updateTransaction(editingId, payload);
+        setTransactions((current) => current.map((item) => (item.id === editingId ? updatedTransaction : item)));
+        showToast('success', 'Transaction updated successfully');
+      } else {
+        const createdTransaction = await createTransaction(payload);
+        setTransactions((current) => [createdTransaction, ...current]);
+        showToast('success', 'Transaction added successfully');
       }
 
-      return [nextTransaction, ...current];
-    });
-
-    showToast('success', editingId ? 'Transaction updated successfully' : 'Transaction added successfully');
-    handleCloseModal();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save transaction:', error);
+      showToast('error', 'Unable to save transaction', error instanceof Error ? error.message : 'Please try again.');
+    }
   };
 
-  const handleDeleteConfirmed = () => {
+  const handleDeleteConfirmed = async () => {
     if (!deleteId) return;
 
-    setTransactions((current) => current.filter((item) => item.id !== deleteId));
-    showToast('info', 'Transaction deleted');
-    setDeleteId(null);
+    try {
+      await deleteTransaction(deleteId);
+      setTransactions((current) => current.filter((item) => item.id !== deleteId));
+      showToast('info', 'Transaction deleted');
+      setDeleteId(null);
+    } catch (error) {
+      console.error('Failed to delete transaction:', error);
+      showToast('error', 'Unable to delete transaction', error instanceof Error ? error.message : 'Please try again.');
+    }
   };
 
   const clearFilters = () => {
@@ -292,7 +324,9 @@ export function Transactions() {
               </tr>
             </thead>
             <tbody>
-              {filteredTransactions.length === 0 ? (
+              {isLoading ? (
+                Array.from({ length: 4 }, (_, index) => <TransactionRowSkeleton key={`transaction-skeleton-${index}`} />)
+              ) : filteredTransactions.length === 0 ? (
                 <tr>
                   <td colSpan={7}>
                     <EmptyState
