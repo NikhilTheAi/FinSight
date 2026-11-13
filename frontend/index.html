@@ -5,6 +5,17 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>frontend</title>
+    <script>
+      (() => {
+        const savedTheme = localStorage.getItem('finsight-theme');
+        const preferredTheme = savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system'
+          ? savedTheme
+          : 'system';
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const resolvedTheme = preferredTheme === 'system' ? (isDark ? 'dark' : 'light') : preferredTheme;
+        document.documentElement.setAttribute('data-theme', resolvedTheme);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

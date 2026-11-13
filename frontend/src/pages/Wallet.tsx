@@ -11,7 +11,9 @@ import {
 } from 'lucide-react';
 
 import { CustomSelect } from '../components/CustomSelect';
+import { EmptyState } from '../components/EmptyState';
 import { Sidebar } from '../components/Sidebar';
+import { useToast } from '../components/Toast';
 
 type AccountType = 'Bank Account' | 'Cash' | 'UPI Wallet' | 'Credit Card';
 
@@ -44,6 +46,7 @@ export function Wallet() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', type: 'Bank Account' as AccountType, balance: '0' });
   const [formError, setFormError] = useState('');
+  const { showToast } = useToast();
 
   const totalBalance = useMemo(
     () => accounts.reduce((sum, account) => sum + account.balance, 0),
@@ -98,11 +101,13 @@ export function Wallet() {
       return [nextAccount, ...current];
     });
 
+    showToast('success', editingId ? 'Account updated successfully' : 'Account added successfully');
     handleClose();
   };
 
   const handleDelete = (id: string) => {
     setAccounts((current) => current.filter((account) => account.id !== id));
+    showToast('info', 'Account removed');
   };
 
   return (
@@ -135,40 +140,49 @@ export function Wallet() {
         </section>
 
         <section className="account-grid">
-          {accounts.map((account) => {
-            const Icon = getAccountIcon(account.type);
+          {accounts.length === 0 ? (
+            <EmptyState
+              title="No accounts yet"
+              description="Add your first account to start tracking your wallet."
+              actionLabel="Add Account"
+              onAction={handleOpenAdd}
+            />
+          ) : (
+            accounts.map((account) => {
+              const Icon = getAccountIcon(account.type);
 
-            return (
-              <article key={account.id} className="account-card">
-                <div className="account-card-header">
-                  <div className="account-title-wrap">
-                    <div className="account-icon">
-                      <Icon size={18} />
+              return (
+                <article key={account.id} className="account-card">
+                  <div className="account-card-header">
+                    <div className="account-title-wrap">
+                      <div className="account-icon">
+                        <Icon size={18} />
+                      </div>
+                      <div>
+                        <h3>{account.name}</h3>
+                        <span>{account.type}</span>
+                      </div>
                     </div>
-                    <div>
-                      <h3>{account.name}</h3>
-                      <span>{account.type}</span>
+
+                    <div className="account-actions">
+                      <button type="button" className="icon-action" aria-label={`Edit ${account.name}`} onClick={() => handleOpenEdit(account)}>
+                        <Pencil size={14} />
+                      </button>
+                      <button type="button" className="icon-action danger" aria-label={`Delete ${account.name}`} onClick={() => handleDelete(account.id)}>
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </div>
 
-                  <div className="account-actions">
-                    <button type="button" className="icon-action" aria-label={`Edit ${account.name}`} onClick={() => handleOpenEdit(account)}>
-                      <Pencil size={14} />
-                    </button>
-                    <button type="button" className="icon-action danger" aria-label={`Delete ${account.name}`} onClick={() => handleDelete(account.id)}>
-                      <Trash2 size={14} />
-                    </button>
+                  <div className="account-amount">₹{account.balance.toLocaleString()}</div>
+                  <div className="account-footer">
+                    <span className="account-pill">Active</span>
+                    <button type="button" className="text-button">View Details</button>
                   </div>
-                </div>
-
-                <div className="account-amount">₹{account.balance.toLocaleString()}</div>
-                <div className="account-footer">
-                  <span className="account-pill">Active</span>
-                  <button type="button" className="text-button">View Details</button>
-                </div>
-              </article>
-            );
-          })}
+                </article>
+              );
+            })
+          )}
         </section>
       </main>
 

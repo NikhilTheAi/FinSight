@@ -3,14 +3,36 @@ import { Save, ShieldCheck, Smartphone } from 'lucide-react';
 
 import { CustomSelect } from '../components/CustomSelect';
 import { Sidebar } from '../components/Sidebar';
+import { useToast } from '../components/Toast';
+
+const THEME_STORAGE_KEY = 'finsight-theme';
+
+const getStoredThemePreference = () => {
+  if (typeof window === 'undefined') {
+    return 'system';
+  }
+
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'system') {
+    return storedTheme;
+  }
+
+  return 'system';
+};
+
+const toAppearanceLabel = (theme: string) => {
+  if (theme === 'light') return 'Light';
+  if (theme === 'dark') return 'Dark';
+  return 'System';
+};
 
 export function Settings() {
   const [form, setForm] = useState({
-    fullName: 'Nikhil Sharma',
+    fullName: 'Nikhil Panwar',
     email: 'nikhil@finsight.app',
     phone: '+91 98765 43210',
     currency: 'INR ₹',
-    appearance: 'Light',
+    appearance: toAppearanceLabel(getStoredThemePreference()),
     budgetAlerts: true,
     goalReminders: true,
     unusualSpendingAlerts: true,
@@ -18,11 +40,28 @@ export function Settings() {
   });
 
   const [saved, setSaved] = useState(false);
+  const { showToast } = useToast();
 
   const handleToggle = (key: keyof typeof form) => {
     if (key === 'fullName' || key === 'email' || key === 'phone' || key === 'currency' || key === 'appearance') return;
 
     setForm((current) => ({ ...current, [key]: !current[key] }));
+  };
+
+  const updateAppearance = (option: 'Light' | 'Dark' | 'System') => {
+    const normalizedTheme = option.toLowerCase();
+    const nextTheme = normalizedTheme === 'system' ? 'system' : normalizedTheme;
+
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+
+    const resolvedTheme = nextTheme === 'system'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light'
+      : nextTheme;
+
+    document.documentElement.setAttribute('data-theme', resolvedTheme);
+    setForm((current) => ({ ...current, appearance: option }));
   };
 
   return (
@@ -143,7 +182,7 @@ export function Settings() {
                   key={option}
                   type="button"
                   className={`option-chip ${form.appearance === option ? 'selected' : ''}`}
-                  onClick={() => setForm((current) => ({ ...current, appearance: option }))}
+                  onClick={() => updateAppearance(option as 'Light' | 'Dark' | 'System')}
                 >
                   {option}
                 </button>
@@ -173,7 +212,14 @@ export function Settings() {
         </section>
 
         <div className="settings-footer">
-          <button type="button" className="primary-button" onClick={() => setSaved(true)}>
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => {
+              setSaved(true);
+              showToast('success', 'Settings saved');
+            }}
+          >
             <Save size={16} />
             Save Changes
           </button>

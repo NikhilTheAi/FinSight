@@ -44,13 +44,15 @@ export function AIInsights() {
 
         <section className="insight-hero panel">
           <div className="insight-hero-copy">
-            <p className="eyebrow">Forecast</p>
+            <p className="eyebrow">FinSight ML Prediction</p>
             <h2>Next Month Expense Prediction</h2>
             <div className="prediction-amount">₹{nextMonthPrediction.toLocaleString()}</div>
+            <div className="prediction-subtitle">Predicted next-month spending</div>
             <div className="prediction-change positive-change">
               <ArrowUpRight size={16} />
               {change.toFixed(1)}% compared with this month
             </div>
+            <p className="prediction-note">Current prediction data is demonstration/mock data for future model integration.</p>
           </div>
 
           <div className="prediction-chart">

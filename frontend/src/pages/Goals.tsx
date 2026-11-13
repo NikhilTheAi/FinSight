@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Pencil, Plus, Target, Trash2, X } from 'lucide-react';
 
+import { EmptyState } from '../components/EmptyState';
 import { Sidebar } from '../components/Sidebar';
+import { useToast } from '../components/Toast';
 
 type Goal = {
   id: string;
@@ -29,6 +31,7 @@ export function Goals() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', current: '0', target: '0', targetDate: '2027-12-31' });
   const [formError, setFormError] = useState('');
+  const { showToast } = useToast();
 
   const totalSaved = useMemo(() => goals.reduce((sum, goal) => sum + goal.current, 0), [goals]);
   const totalTarget = useMemo(() => goals.reduce((sum, goal) => sum + goal.target, 0), [goals]);
@@ -85,11 +88,13 @@ export function Goals() {
       return [nextGoal, ...current];
     });
 
+    showToast('success', editingId ? 'Goal updated successfully' : 'Goal created successfully');
     handleClose();
   };
 
   const handleDelete = (id: string) => {
     setGoals((current) => current.filter((goal) => goal.id !== id));
+    showToast('info', 'Goal removed');
   };
 
   return (
@@ -138,46 +143,55 @@ export function Goals() {
         </section>
 
         <section className="goal-list-grid">
-          {goals.map((goal) => {
-            const progress = goal.target > 0 ? (goal.current / goal.target) * 100 : 0;
-            const color = getProgressColor(progress / 100);
+          {goals.length === 0 ? (
+            <EmptyState
+              title="No goals yet"
+              description="Set your first savings target and track progress."
+              actionLabel="Create Goal"
+              onAction={handleOpenAdd}
+            />
+          ) : (
+            goals.map((goal) => {
+              const progress = goal.target > 0 ? (goal.current / goal.target) * 100 : 0;
+              const color = getProgressColor(progress / 100);
 
-            return (
-              <article key={goal.id} className="panel goal-card">
-                <div className="goal-card-top">
-                  <div className="goal-title-wrap">
-                    <div className="account-icon goal-icon">
-                      <Target size={18} />
+              return (
+                <article key={goal.id} className="panel goal-card">
+                  <div className="goal-card-top">
+                    <div className="goal-title-wrap">
+                      <div className="account-icon goal-icon">
+                        <Target size={18} />
+                      </div>
+                      <div>
+                        <h3>{goal.name}</h3>
+                        <p>
+                          ₹{goal.current.toLocaleString()} / ₹{goal.target.toLocaleString()}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3>{goal.name}</h3>
-                      <p>
-                        ₹{goal.current.toLocaleString()} / ₹{goal.target.toLocaleString()}
-                      </p>
+
+                    <div className="account-actions">
+                      <button type="button" className="icon-action" aria-label={`Edit ${goal.name}`} onClick={() => handleOpenEdit(goal)}>
+                        <Pencil size={14} />
+                      </button>
+                      <button type="button" className="icon-action danger" aria-label={`Delete ${goal.name}`} onClick={() => handleDelete(goal.id)}>
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </div>
 
-                  <div className="account-actions">
-                    <button type="button" className="icon-action" aria-label={`Edit ${goal.name}`} onClick={() => handleOpenEdit(goal)}>
-                      <Pencil size={14} />
-                    </button>
-                    <button type="button" className="icon-action danger" aria-label={`Delete ${goal.name}`} onClick={() => handleDelete(goal.id)}>
-                      <Trash2 size={14} />
-                    </button>
+                  <div className="goal-metric-row">
+                    <span>{Math.round(progress)}% complete</span>
+                    <span>Target: {new Date(goal.targetDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                   </div>
-                </div>
 
-                <div className="goal-metric-row">
-                  <span>{Math.round(progress)}% complete</span>
-                  <span>Target: {new Date(goal.targetDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                </div>
-
-                <div className="goal-bar">
-                  <span style={{ width: `${Math.min(progress, 100)}%`, background: color }} />
-                </div>
-              </article>
-            );
-          })}
+                  <div className="goal-bar">
+                    <span style={{ width: `${Math.min(progress, 100)}%`, background: color }} />
+                  </div>
+                </article>
+              );
+            })
+          )}
         </section>
       </main>
 

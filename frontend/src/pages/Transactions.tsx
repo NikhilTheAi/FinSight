@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Bell,
-  CreditCard,
   Edit3,
   Plus,
   Search,
@@ -12,7 +11,10 @@ import { useSearchParams } from 'react-router-dom';
 
 import { CustomSelect } from '../components/CustomSelect';
 import { DatePicker } from '../components/DatePicker';
+import { EmptyState } from '../components/EmptyState';
 import { SummaryCard } from '../components/SummaryCard';
+import { TransactionCategoryIcon } from '../components/TransactionCategoryIcon';
+import { useToast } from '../components/Toast';
 import {
   categoryOptions,
   initialTransactions,
@@ -58,6 +60,7 @@ export function Transactions() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<TransactionFormState>(buildEmptyForm());
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const { showToast } = useToast();
 
   useEffect(() => {
     const requestedType = searchParams.get('type');
@@ -168,6 +171,7 @@ export function Transactions() {
       return [nextTransaction, ...current];
     });
 
+    showToast('success', editingId ? 'Transaction updated successfully' : 'Transaction added successfully');
     handleCloseModal();
   };
 
@@ -175,6 +179,7 @@ export function Transactions() {
     if (!deleteId) return;
 
     setTransactions((current) => current.filter((item) => item.id !== deleteId));
+    showToast('info', 'Transaction deleted');
     setDeleteId(null);
   };
 
@@ -287,44 +292,56 @@ export function Transactions() {
               </tr>
             </thead>
             <tbody>
-              {filteredTransactions.map((transaction) => {
-                const isIncome = transaction.type === 'Income';
+              {filteredTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan={7}>
+                    <EmptyState
+                      title="No transactions found"
+                      description="Try adjusting your search or filters."
+                      actionLabel="Add Transaction"
+                      onAction={() => handleOpenAddModal('Expense')}
+                      icon={<Search size={22} />}
+                    />
+                  </td>
+                </tr>
+              ) : (
+                filteredTransactions.map((transaction) => {
+                  const isIncome = transaction.type === 'Income';
 
-                return (
-                  <tr key={transaction.id}>
-                    <td>
-                      <div className="table-title-wrap">
-                        <div className={`transaction-icon ${isIncome ? 'income' : 'expense'}`}>
-                          {isIncome ? <Plus size={14} /> : <CreditCard size={14} />}
+                  return (
+                    <tr key={transaction.id}>
+                      <td>
+                        <div className="table-title-wrap">
+                          <TransactionCategoryIcon category={transaction.category} type={transaction.type} size={16} />
+                          <div>
+                            <div className="table-title">{transaction.title}</div>
+                            {transaction.note ? <small>{transaction.note}</small> : null}
+                          </div>
                         </div>
-                        <div>
-                          <div className="table-title">{transaction.title}</div>
-                          {transaction.note ? <small>{transaction.note}</small> : null}
+                      </td>
+                      <td>{transaction.category}</td>
+                      <td>{new Date(`${transaction.date}T00:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                      <td>{transaction.paymentMethod}</td>
+                      <td className={isIncome ? 'amount-income' : 'amount-expense'}>
+                        {isIncome ? '+' : '-'}₹{transaction.amount.toLocaleString()}
+                      </td>
+                      <td>
+                        <span className={`table-badge ${isIncome ? 'income' : 'expense'}`}>{transaction.type}</span>
+                      </td>
+                      <td>
+                        <div className="action-group">
+                          <button type="button" className="icon-action" aria-label="Edit transaction" onClick={() => handleOpenEditModal(transaction)}>
+                            <Edit3 size={15} />
+                          </button>
+                          <button type="button" className="icon-action danger" aria-label="Delete transaction" onClick={() => setDeleteId(transaction.id)}>
+                            <Trash2 size={15} />
+                          </button>
                         </div>
-                      </div>
-                    </td>
-                    <td>{transaction.category}</td>
-                    <td>{new Date(`${transaction.date}T00:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                    <td>{transaction.paymentMethod}</td>
-                    <td className={isIncome ? 'amount-income' : 'amount-expense'}>
-                      {isIncome ? '+' : '-'}₹{transaction.amount.toLocaleString()}
-                    </td>
-                    <td>
-                      <span className={`table-badge ${isIncome ? 'income' : 'expense'}`}>{transaction.type}</span>
-                    </td>
-                    <td>
-                      <div className="action-group">
-                        <button type="button" className="icon-action" aria-label="Edit transaction" onClick={() => handleOpenEditModal(transaction)}>
-                          <Edit3 size={15} />
-                        </button>
-                        <button type="button" className="icon-action danger" aria-label="Delete transaction" onClick={() => setDeleteId(transaction.id)}>
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

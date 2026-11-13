@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
+import { EmptyState } from '../components/EmptyState';
 import { Sidebar } from '../components/Sidebar';
+import { useToast } from '../components/Toast';
 
 const formatCurrencyValue = (value: number | string | readonly (number | string)[] | undefined) => {
   const numericValue = Array.isArray(value) ? Number(value[0] ?? 0) : Number(value ?? 0);
@@ -36,6 +38,7 @@ export function Budgets() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ category: 'Food & Dining', spent: '0', limit: '0' });
   const [formError, setFormError] = useState('');
+  const { showToast } = useToast();
 
   const totalLimit = useMemo(() => budgets.reduce((sum, budget) => sum + budget.limit, 0), [budgets]);
   const totalSpent = useMemo(() => budgets.reduce((sum, budget) => sum + budget.spent, 0), [budgets]);
@@ -97,11 +100,13 @@ export function Budgets() {
       return [nextBudget, ...current];
     });
 
+    showToast('success', editingId ? 'Budget updated successfully' : 'Budget created successfully');
     handleClose();
   };
 
   const handleDelete = (id: string) => {
     setBudgets((current) => current.filter((budget) => budget.id !== id));
+    showToast('info', 'Budget removed');
   };
 
   return (
@@ -181,40 +186,49 @@ export function Budgets() {
         </section>
 
         <section className="budget-list-area">
-          {budgets.map((budget) => {
-            const ratio = budget.limit > 0 ? budget.spent / budget.limit : 0;
-            const color = getProgressColor(ratio);
+          {budgets.length === 0 ? (
+            <EmptyState
+              title="No budgets yet"
+              description="Create your first budget to track category spending."
+              actionLabel="Create Budget"
+              onAction={handleOpenAdd}
+            />
+          ) : (
+            budgets.map((budget) => {
+              const ratio = budget.limit > 0 ? budget.spent / budget.limit : 0;
+              const color = getProgressColor(ratio);
 
-            return (
-              <article key={budget.id} className="panel budget-item">
-                <div className="budget-item-top">
-                  <div>
-                    <h3>{budget.category}</h3>
-                    <p>
-                      ₹{budget.spent.toLocaleString()} / ₹{budget.limit.toLocaleString()}
-                    </p>
+              return (
+                <article key={budget.id} className="panel budget-item">
+                  <div className="budget-item-top">
+                    <div>
+                      <h3>{budget.category}</h3>
+                      <p>
+                        ₹{budget.spent.toLocaleString()} / ₹{budget.limit.toLocaleString()}
+                      </p>
+                    </div>
+
+                    <div className="account-actions">
+                      <button type="button" className="icon-action" aria-label={`Edit ${budget.category}`} onClick={() => handleOpenEdit(budget)}>
+                        <Pencil size={14} />
+                      </button>
+                      <button type="button" className="icon-action danger" aria-label={`Delete ${budget.category}`} onClick={() => handleDelete(budget.id)}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="account-actions">
-                    <button type="button" className="icon-action" aria-label={`Edit ${budget.category}`} onClick={() => handleOpenEdit(budget)}>
-                      <Pencil size={14} />
-                    </button>
-                    <button type="button" className="icon-action danger" aria-label={`Delete ${budget.category}`} onClick={() => handleDelete(budget.id)}>
-                      <Trash2 size={14} />
-                    </button>
+                  <div className="goal-bar">
+                    <span style={{ width: `${Math.min(ratio * 100, 100)}%`, background: color }} />
                   </div>
-                </div>
-
-                <div className="goal-bar">
-                  <span style={{ width: `${Math.min(ratio * 100, 100)}%`, background: color }} />
-                </div>
-                <div className="budget-legend">
-                  <span>{Math.round(ratio * 100)}% used</span>
-                  <span>{budget.limit - budget.spent > 0 ? `₹${(budget.limit - budget.spent).toLocaleString()} left` : 'Limit reached'}</span>
-                </div>
-              </article>
-            );
-          })}
+                  <div className="budget-legend">
+                    <span>{Math.round(ratio * 100)}% used</span>
+                    <span>{budget.limit - budget.spent > 0 ? `₹${(budget.limit - budget.spent).toLocaleString()} left` : 'Limit reached'}</span>
+                  </div>
+                </article>
+              );
+            })
+          )}
         </section>
       </main>
 

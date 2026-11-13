@@ -1,6 +1,6 @@
-import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { TransactionCategoryIcon } from '../components/TransactionCategoryIcon';
 import { recentTransactions } from '../data/mockData';
 
 export function RecentTransactions() {
@@ -25,9 +25,7 @@ export function RecentTransactions() {
           return (
             <div key={item.title} className="transaction-item">
               <div className="transaction-meta">
-                <div className={`transaction-icon ${isIncome ? 'income' : 'expense'}`}>
-                  {isIncome ? <ArrowUpRight size={16} /> : <ArrowDownLeft size={16} />}
-                </div>
+                <TransactionCategoryIcon category={item.category} type={isIncome ? 'Income' : 'Expense'} size={16} />
                 <div>
                   <h3>{item.title}</h3>
                   <span>{item.category}</span>
