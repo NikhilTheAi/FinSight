@@ -1,116 +1,89 @@
-# FinSight
+# FinSight 💰
 
-FinSight is a personal finance dashboard and portfolio-style application built to demonstrate a premium fintech UI, interactive financial tracking, and a complete route-based frontend experience. It is designed as a frontend-first prototype with a polished dashboard and management pages for transactions, budgets, wallets, goals, analytics, and AI-style insights.
+**A modern smart expense tracking and financial analytics application.**
 
-## Project Preview
+FinSight helps users track expenses, manage budgets, monitor financial goals, and understand their spending through a clean and interactive dashboard.
 
-![Dashboard Preview](#)
+> 🚧 **Currently under development** — The frontend experience is functional, while backend integration and AI/ML-powered insights are being developed.
 
-![Transactions Preview](#)
+---
 
-![Analytics Preview](#)
+## ✨ Features
 
-![AI Insights Preview](#)
+- 📊 Interactive financial dashboard
+- 💳 Income & expense tracking
+- 🔎 Search and filter transactions
+- 💰 Budget management
+- 👛 Wallet & account management
+- 🎯 Financial goal tracking
+- 📈 Spending analytics and visualizations
+- 🤖 AI-powered financial insights *(in development)*
+- ⚙️ User preferences and settings
 
-## Project Status
+---
 
-This repository currently contains a working frontend experience and the supporting backend/ML foundations:
-
-- Frontend: implemented and running as a Vite + React + TypeScript application
-- Backend: Spring Boot foundation exists for future API integration
-- ML service: Python Flask scaffold exists for future forecasting/AI features
-- Data layer: the current app uses mock data and local state for UI demonstration and testing
-
-> The project is best viewed as a polished frontend prototype and financial dashboard concept, not yet as a fully integrated production finance platform.
-
-## What is Included
-
-### Frontend dashboard and navigation
-- Premium dashboard landing page with KPI cards, charts, and recent activity
-- Sidebar-based navigation with route pages for:
-  - Dashboard
-  - Transactions
-  - Wallet
-  - Budgets
-  - Goals
-  - Analytics
-  - AI Insights
-  - Settings
-- Responsive, modern fintech-inspired styling and layout
-
-### Transactions management
-- Search and filtering by type, category, and date
-- Transaction add, edit, and delete flows
-- Summary cards for total income and total expenses
-- Custom premium controls for better visual consistency
-
-### Financial planning pages
-- Wallet page with account summaries and editing flows
-- Budgets page with spend tracking and progress visualization
-- Goals page with savings targets and progress metrics
-- Analytics page with chart-driven financial insights
-- AI Insights page with forecast-style recommendations
-- Settings page with preferences and profile controls
-
-### UI polish
-- Custom dropdown/select components to replace browser-native controls
-- Premium date filter experience for transaction queries
-- Improved contrast and elevated styling consistent with a fintech dashboard aesthetic
-
-## Tech Stack
+## 🛠️ Tech Stack
 
 ### Frontend
-- React 19
+- React
 - TypeScript
 - Vite
-- React Router DOM
+- React Router
 - Recharts
 - Lucide React
 
 ### Backend
-- Java 17
-- Spring Boot 3.3.6
-- Spring Web
+- Java
+- Spring Boot
 - Spring Data JPA
 - Spring Security
-- Validation
-- MySQL driver
+- MySQL
 
-### ML / AI Service
+### AI / ML
 - Python
 - Flask
+- Machine Learning integration *(planned)*
 
-## Repository Structure
+---
+
+## 🏗️ Architecture
+
+```text
+React + TypeScript Frontend
+          ↓
+    Spring Boot API
+          ↓
+       MySQL
+          ↓
+ Python / Flask ML Service
+```
+
+The project follows a modular architecture separating the **frontend, backend, database, and future ML service**.
+
+---
+
+## 📂 Project Structure
 
 ```text
 FinSight/
-├── backend/                 # Spring Boot backend foundation
-│   ├── pom.xml
-│   └── src/
-├── frontend/                # Main React application
-│   ├── package.json
-│   ├── public/
-│   └── src/
-├── ml-service/              # Python Flask service foundation
-│   ├── app.py
-│   └── requirements.txt
-├── docs/                    # Project documentation and notes
-├── .gitignore
-├── README.md                # This file
-└── ...
+├── frontend/        # React + TypeScript application
+├── backend/         # Spring Boot backend
+├── ml-service/      # Python/Flask ML service
+├── docs/            # Documentation
+└── README.md
 ```
 
-## Getting Started
+---
+
+## 🚀 Getting Started
 
 ### Frontend
 
 ```bash
 cd frontend
 npm install
-npm run dev -- --host 0.0.0.0
+npm run dev
 ```
-
-Then open the local Vite URL shown in the terminal.
 
 ### Backend
 
@@ -119,36 +92,62 @@ cd backend
 mvn spring-boot:run
 ```
 
-### ML service
+### ML Service
 
 ```bash
 cd ml-service
 python app.py
 ```
 
-## Notes on Current Implementation
+---
 
-- The frontend is the most complete and verified part of the repository.
-- Transaction, budget, wallet, goals, analytics, and settings flows are built using mock data and local state.
-- No full end-to-end backend integration is currently implemented.
-- The AI/forecasting flow is a UI mockup and should be treated as a prototype rather than a production ML system.
-- Authentication, persistence, and database integration are planned future work.
+## 🚧 Current Status
 
-## Roadmap
+**Completed / Working**
+- Frontend dashboard
+- Transaction management UI
+- Wallet management UI
+- Budget tracking UI
+- Financial goals UI
+- Analytics dashboard
+- Responsive navigation and interface
 
-Planned next steps for the project include:
+**In Development**
+- Frontend ↔ Spring Boot API integration
+- Authentication
+- Database persistence
+- AI/ML financial insights
+- Forecasting and recommendations
 
-1. Connect the frontend to real backend APIs
-2. Implement authentication and user sessions
-3. Replace mock financial data with persistent storage
-4. Integrate the ML service for real forecasting and recommendations
-5. Add production-grade validation, testing, and deployment setup
+---
 
-## Summary
+## 🗺️ Roadmap
 
-FinSight is a polished personal finance dashboard concept built for a modern fintech experience, with a strong emphasis on usability, visual design, and route-based financial management flows. It demonstrates a complete frontend UI shell while leaving the backend and ML layers as a clear next step for real-world product development.
+- [x] Build complete frontend dashboard
+- [x] Implement transaction management interface
+- [x] Build budgets, wallets and goals interfaces
+- [x] Build financial analytics interface
+- [ ] Connect frontend with Spring Boot APIs
+- [ ] Implement authentication and user sessions
+- [ ] Integrate MySQL persistence
+- [ ] Build ML-based spending analysis
+- [ ] Add expense forecasting
+- [ ] Generate personalized financial insights
+- [ ] Deploy the application
 
-## Author
+---
 
-Nikhil Panwar
-GitHub: NikhilTheAi
+## 🎯 Goal
+
+FinSight is being developed as a full-stack financial application with the long-term goal of combining **software engineering, financial analytics, and machine learning** to provide smarter insights into personal spending.
+
+---
+
+## 👨‍💻 Developer
+
+**Nikhil Panwar**
+
+MCA (Artificial Intelligence & Machine Learning) @ UPES  
+Aspiring AI/ML Engineer
+
+[LinkedIn](https://www.linkedin.com/in/nikhil-panwar-935a77447/)
