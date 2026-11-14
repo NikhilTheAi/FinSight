@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 import com.finsight.entity.TransactionType;
 
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,6 +17,7 @@ public class TransactionRequest {
 
     @NotNull(message = "amount is required")
     @DecimalMin(value = "0.01", message = "amount must be greater than 0")
+    @DecimalMax(value = "10000000", message = "Amount cannot exceed ₹1,00,00,000.")
     private BigDecimal amount;
 
     @NotNull(message = "type is required")

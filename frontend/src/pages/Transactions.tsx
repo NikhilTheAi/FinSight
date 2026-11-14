@@ -38,6 +38,7 @@ type TransactionFormState = {
 };
 
 const defaultDate = new Date().toISOString().slice(0, 10);
+const MAX_TRANSACTION_AMOUNT = 10000000;
 
 const buildEmptyForm = (type: TransactionType = 'Expense'): TransactionFormState => ({
   type,
@@ -62,6 +63,7 @@ export function Transactions() {
   const [form, setForm] = useState<TransactionFormState>(buildEmptyForm());
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -75,23 +77,34 @@ export function Transactions() {
     }
   }, [searchParams, setSearchParams]);
 
-  useEffect(() => {
-    const loadTransactions = async () => {
-      try {
-        setIsLoading(true);
-        const nextTransactions = await getTransactions();
-        setTransactions(nextTransactions);
-      } catch (error) {
-        console.error('Failed to load transactions:', error);
-        showToast('error', 'Unable to load transactions', 'Please check that the backend server is running.');
-        setTransactions([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const retryLoadTransactions = async () => {
+    try {
+      setIsLoading(true);
+      setLoadError(false);
+      const nextTransactions = await getTransactions();
+      setTransactions(nextTransactions);
+    } catch (error) {
+      console.error('Failed to load transactions:', error);
+      setLoadError(true);
+      setTransactions([]);
+      showToast('error', 'Unable to load transactions', "We couldn't connect to the FinSight server.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    void loadTransactions();
+  useEffect(() => {
+    void retryLoadTransactions();
   }, [showToast]);
+
+  useEffect(() => {
+    const isModalOpenState = isModalOpen || Boolean(deleteId);
+    document.body.classList.toggle('modal-open', isModalOpenState);
+
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, [deleteId, isModalOpen]);
 
   const totalIncome = useMemo(
     () => transactions.filter((item) => item.type === 'Income').reduce((sum, item) => sum + item.amount, 0),
@@ -158,6 +171,8 @@ export function Transactions() {
 
     if (!form.amount || Number(form.amount) <= 0) {
       nextErrors.amount = 'Enter a valid amount greater than zero.';
+    } else if (Number(form.amount) > MAX_TRANSACTION_AMOUNT) {
+      nextErrors.amount = 'Amount cannot exceed ₹1,00,00,000.';
     }
 
     if (!form.date) {
@@ -253,9 +268,9 @@ export function Transactions() {
       </header>
 
       <section className="transactions-summary-grid summary-grid">
-        <SummaryCard label="Total Income" amount={`₹${totalIncome.toLocaleString()}`} change="+6.3%" positive={true} />
-        <SummaryCard label="Total Expenses" amount={`₹${totalExpenses.toLocaleString()}`} change="-2.4%" positive={false} />
-        <SummaryCard label="Net Balance" amount={`₹${netBalance.toLocaleString()}`} change="+12%" positive={true} accent="primary" />
+        <SummaryCard label="Total Income" amount={loadError || isLoading ? '—' : `₹${totalIncome.toLocaleString()}`} change={loadError || isLoading ? 'Unavailable' : '+6.3%'} positive={!loadError && !isLoading} />
+        <SummaryCard label="Total Expenses" amount={loadError || isLoading ? '—' : `₹${totalExpenses.toLocaleString()}`} change={loadError || isLoading ? 'Unavailable' : '-2.4%'} positive={false} />
+        <SummaryCard label="Net Balance" amount={loadError || isLoading ? '—' : `₹${netBalance.toLocaleString()}`} change={loadError || isLoading ? 'Unavailable' : '+12%'} positive={!loadError && !isLoading} accent="primary" />
       </section>
 
       <section className="panel filter-panel">
@@ -326,6 +341,20 @@ export function Transactions() {
             <tbody>
               {isLoading ? (
                 Array.from({ length: 4 }, (_, index) => <TransactionRowSkeleton key={`transaction-skeleton-${index}`} />)
+              ) : loadError ? (
+                <tr>
+                  <td colSpan={7}>
+                    <EmptyState
+                      title="Unable to load transactions"
+                      description="We couldn't connect to the FinSight server."
+                      actionLabel="Retry"
+                      onAction={() => {
+                        void retryLoadTransactions();
+                      }}
+                      icon={<Search size={22} />}
+                    />
+                  </td>
+                </tr>
               ) : filteredTransactions.length === 0 ? (
                 <tr>
                   <td colSpan={7}>
@@ -408,8 +437,8 @@ export function Transactions() {
                 <span>Amount</span>
                 <input
                   type="number"
-                  min="1"
-                  step="1"
+                  min="0.01"
+                  step="0.01"
                   value={form.amount}
                   onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))}
                   placeholder="0"

@@ -1444,17 +1444,25 @@ html[data-theme='dark'] .profile-dropdown {
   display: grid;
   place-items: center;
   z-index: 50;
-  padding: 20px;
+  padding: clamp(12px, 4vw, 20px);
 }
 
 .transaction-modal,
 .confirm-modal {
   width: min(100%, 560px);
+  max-height: min(90dvh, 760px);
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 20px;
   box-shadow: 0 25px 50px rgba(16, 35, 54, 0.18);
   padding: 22px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.modal-open {
+  overflow: hidden;
 }
 
 .modal-header {
@@ -1515,6 +1523,37 @@ html[data-theme='dark'] .profile-dropdown {
 .modal-actions .primary-button {
   width: auto;
   min-width: 150px;
+}
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 12px;
+    align-items: flex-start;
+  }
+
+  .transaction-modal,
+  .confirm-modal {
+    width: min(100%, 560px);
+    max-height: calc(100dvh - 24px);
+  }
+
+  .modal-form {
+    grid-template-columns: 1fr;
+  }
+
+  .field-group:nth-child(3),
+  .field-group:nth-child(6) {
+    grid-column: auto;
+  }
+
+  .modal-actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--card);
+    padding-top: 12px;
+    margin-top: 12px;
+    z-index: 1;
+  }
 }
 
 .danger-button {
